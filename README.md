@@ -1,5 +1,7 @@
 # DPDK Informer
 
+![DPDK Informer Logo](logo/logo.png)
+
 ### Описание
 Библиотека `dpdk_informer` предоставляет программный интерфейс (API) для получения подробной информации о сетевых 
 интерфейсах, управляемых фреймворком DPDK (Data Plane Development Kit) в операционной системе Linux. 
