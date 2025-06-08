@@ -5,6 +5,7 @@ set(INFORMER_VERSION "@PROJECT_VERSION@")
 include(CMakeFindDependencyMacro)
 find_dependency(fmt REQUIRED)
 find_dependency(PkgConfig REQUIRED)
+pkg_check_modules(DPDK REQUIRED libdpdk)
 
 set_and_check(INFORMER_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
 set_and_check(INFORMER_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")

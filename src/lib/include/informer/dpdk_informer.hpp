@@ -21,6 +21,9 @@ class InformerDpdk {
     InformerDpdk &operator=(InformerDpdk const &) = delete;
     InformerDpdk &operator=(InformerDpdk &&) = delete;
 
+    virtual nlohmann::json get_all_interface() = 0;
+    virtual ::nlohmann::json get_interface_info(std::string const &interface_name) = 0;
+
     static std::unique_ptr<InformerDpdk> create();
 
    private:

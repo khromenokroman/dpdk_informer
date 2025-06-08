@@ -1,13 +1,8 @@
-set(LIB_NAME interface_informer)
+set(LIB_NAME dpdk_informer)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBNL REQUIRED libnl-3.0 libnl-route-3.0)
 find_package(fmt REQUIRED)
-
-include_directories(${LIBNL_INCLUDE_DIRS})
-include_directories(include)
-link_directories(${LIBNL_LIBRARY_DIRS})
-
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DPDK REQUIRED libdpdk)
 
 set(INCLUDE_DIR include)
 set(SOURCES printer.cpp)
@@ -43,7 +38,8 @@ endif ()
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIR})
 
 target_link_libraries(${LIB_NAME} PRIVATE
-        ${LIBNL_LIBRARIES}
+        ${DPDK_LIBRARIES}
+        numa
         fmt::fmt
 )
 
@@ -57,14 +53,14 @@ install(DIRECTORY ${INCLUDE_DIR}/
 install(EXPORT ${LIB_NAME}Targets
         FILE ${LIB_NAME}Targets.cmake
         NAMESPACE ${LIB_NAME}::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/interface_informer
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dpdk_informer
         COMPONENT dev
 )
 
 install(FILES
-        ${CMAKE_BINARY_DIR}/interface_informer-configVersion.cmake
-        ${CMAKE_BINARY_DIR}/interface_informer-config.cmake
+        ${CMAKE_BINARY_DIR}/dpdk_informer-configVersion.cmake
+        ${CMAKE_BINARY_DIR}/dpdk_informer-config.cmake
         DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/interface_informer
+        ${CMAKE_INSTALL_LIBDIR}/cmake/dpdk_informer
         COMPONENT dev
 )

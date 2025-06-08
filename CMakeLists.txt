@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Собирать динамическую библиотеку вместо статической" ON)
-option(BUILD_EXAMPLE "Собирать приложение (пример)" OFF)
+option(BUILD_EXAMPLE "Собирать приложение (пример)" ON)
 
 include(GNUInstallDirs)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR} CACHE PATH "Path for headers installation")
@@ -32,9 +32,9 @@ write_basic_package_version_file(
         COMPATIBILITY SameMajorVersion
 )
 
-#if (BUILD_EXAMPLE)
-#    add_subdirectory(src/example)
-#endif ()
+if (BUILD_EXAMPLE)
+    add_subdirectory(src/example)
+endif ()
 add_subdirectory(src/lib)
 
 set(CPACK_GENERATOR DEB)
@@ -46,20 +46,20 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${P
 
 if (BUILD_SHARED_LIBS)
     # Настройки для динамической библиотеки
-#    set(CPACK_DEBIAN_LIB_PACKAGE_NAME "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR}")
-#    set(CPACK_DEBIAN_LIB_DESCRIPTION "Getting info interface dpdk")
-#    set(CPACK_DEBIAN_LIB_MAINTAINER "roma55592@yandex.ru")
-#    set(CPACK_DEBIAN_LIB_PACKAGE_SHLIBDEPS ON)
-#
-#    # Настройки для dev-пакета при динамической библиотеке
-#    set(CPACK_DEBIAN_DEV_PACKAGE_NAME "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR}-dev")
-#    set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR} (= ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})")
-#    set(CPACK_DEBIAN_DEV_DESCRIPTION "Getting info interface dpdk - development files")
-#    set(CPACK_DEBIAN_DEV_MAINTAINER "roma55592@yandex.ru")
-#    set(CPACK_DEBIAN_DEV_PACKAGE_SHLIBDEPS ON)
-#
-#    # Указываем компоненты для CPack
-#    set(CPACK_COMPONENTS_ALL lib dev)
+    set(CPACK_DEBIAN_LIB_PACKAGE_NAME "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR}")
+    set(CPACK_DEBIAN_LIB_DESCRIPTION "Getting info interface dpdk")
+    set(CPACK_DEBIAN_LIB_MAINTAINER "roma55592@yandex.ru")
+    set(CPACK_DEBIAN_LIB_PACKAGE_SHLIBDEPS ON)
+
+    # Настройки для dev-пакета при динамической библиотеке
+    set(CPACK_DEBIAN_DEV_PACKAGE_NAME "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR}-dev")
+    set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR} (= ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})")
+    set(CPACK_DEBIAN_DEV_DESCRIPTION "Getting info interface dpdk - development files")
+    set(CPACK_DEBIAN_DEV_MAINTAINER "roma55592@yandex.ru")
+    set(CPACK_DEBIAN_DEV_PACKAGE_SHLIBDEPS ON)
+
+    # Указываем компоненты для CPack
+    set(CPACK_COMPONENTS_ALL lib dev)
 else ()
     # Настройки для статической библиотеки - создаём только dev-пакет
     set(CPACK_DEBIAN_DEV_PACKAGE_NAME "lib${PROJECT_NAME}${PROJECT_VERSION_MAJOR}-dev")
