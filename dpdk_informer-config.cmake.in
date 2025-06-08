@@ -1,0 +1,15 @@
+set(INFORMER_VERSION "@PROJECT_VERSION@")
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(fmt REQUIRED)
+find_dependency(PkgConfig REQUIRED)
+
+set_and_check(INFORMER_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set_and_check(INFORMER_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")
+
+# Подключаем файл с экспортированными целями
+include("${CMAKE_CURRENT_LIST_DIR}/dpdk_informerTargets.cmake")
+
+check_required_components(dpdk_informer)
