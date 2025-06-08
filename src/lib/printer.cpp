@@ -28,6 +28,7 @@ ShowInfoInterface::ShowInfoInterface() {
 
     init();
 }
+
 nlohmann::json ShowInfoInterface::get_all_interface() {
     nlohmann::json result = nlohmann::json::array();
     uint16_t const nb_ports = rte_eth_dev_count_avail();
@@ -46,52 +47,43 @@ nlohmann::json ShowInfoInterface::get_all_interface() {
 
     return result;
 }
+
 nlohmann::json ShowInfoInterface::get_interface_info(std::string const &interface_name) {
-    try {
-        uint16_t const nb_ports = rte_eth_dev_count_avail();
-        if (nb_ports == 0) {
-            throw exceptions::PortNotFind("Не найдено портов Ethernet, управляемых DPDK");
-        }
-
-        // Проверяем, является ли входное значение числом (ID порта)
-        uint16_t port_id_from_name = RTE_MAX_ETHPORTS;
-        bool is_port_id = false;
-
-        try {
-            port_id_from_name = std::stoi(interface_name);
-            is_port_id = (port_id_from_name < nb_ports);
-        } catch (...) {
-            // Не является числом, продолжаем поиск по имени
-        }
-
-        // Если передан корректный ID порта, используем его напрямую
-        if (is_port_id) {
-            return get_detailed_info(port_id_from_name);
-        }
-
-        // Иначе ищем порт по имени
-        for (uint16_t port_id = 0; port_id < nb_ports; port_id++) {
-            char dev_name[RTE_ETH_NAME_MAX_LEN];
-            if (rte_eth_dev_get_name_by_port(port_id, dev_name) != 0) {
-                continue;
-            }
-
-            if (interface_name == dev_name) {
-                return get_detailed_info(port_id);
-            }
-        }
-
-        // Если интерфейс не найден
-        throw exceptions::PortNotFind(::fmt::format("Интерфейс '{}' не найден среди DPDK-портов", interface_name));
-
-    } catch (const exceptions::DpdkEx& ex) {
-        // Перебрасываем исключения DPDK дальше
-        throw;
-    } catch (const std::exception& ex) {
-        // Преобразуем стандартные исключения в DpdkEx
-        throw exceptions::DpdkEx(std::string("Ошибка при получении информации об интерфейсе: ") + ex.what());
+    uint16_t const nb_ports = rte_eth_dev_count_avail();
+    if (nb_ports == 0) {
+        throw exceptions::PortNotFind("Не найдено портов Ethernet, управляемых DPDK");
     }
+
+    // Проверяем, является ли входное значение числом (ID порта)
+    uint16_t port_id_from_name = RTE_MAX_ETHPORTS;
+    bool is_port_id = false;
+
+    try {
+        port_id_from_name = std::stoi(interface_name);
+        is_port_id = (port_id_from_name < nb_ports);
+    } catch (...) {
+        // Не является числом, продолжаем поиск по имени
+    }
+
+    // Если передан корректный ID порта, используем его напрямую
+    if (is_port_id) {
+        return get_detailed_info(port_id_from_name);
+    }
+
+    for (uint16_t port_id = 0; port_id < nb_ports; port_id++) {
+        char dev_name[RTE_ETH_NAME_MAX_LEN];
+        if (rte_eth_dev_get_name_by_port(port_id, dev_name) != 0) {
+            continue;
+        }
+
+        if (interface_name == dev_name) {
+            return get_detailed_info(port_id);
+        }
+    }
+
+    throw exceptions::PortNotFind(::fmt::format("Интерфейс '{}' не найден среди DPDK-портов", interface_name));
 }
+
 void ShowInfoInterface::init() const {
     std::vector<std::string> eal_params;
 
@@ -133,7 +125,8 @@ void ShowInfoInterface::init() const {
         throw std::runtime_error("EAL master process is dead");
     }
 }
-InterfaceInfo ShowInfoInterface::get_basic_info(uint16_t port_id) const {
+
+InterfaceInfo ShowInfoInterface::get_basic_info(uint16_t port_id) {
     InterfaceInfo info;
     info.port_id = port_id;
 
@@ -146,7 +139,7 @@ InterfaceInfo ShowInfoInterface::get_basic_info(uint16_t port_id) const {
     }
 
     // Получаем информацию о драйвере и устройстве
-    struct rte_eth_dev_info dev_info;
+    rte_eth_dev_info dev_info{};
     if (rte_eth_dev_info_get(port_id, &dev_info) == 0) {
         info.driver = dev_info.driver_name ? dev_info.driver_name : "неизвестен";
 
@@ -161,13 +154,11 @@ InterfaceInfo ShowInfoInterface::get_basic_info(uint16_t port_id) const {
     }
 
     // Получаем MAC-адрес
-    struct rte_ether_addr mac_addr;
+    rte_ether_addr mac_addr{};
     if (rte_eth_macaddr_get(port_id, &mac_addr) == 0) {
         char mac_str[18];
-        snprintf(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X",
-                 mac_addr.addr_bytes[0], mac_addr.addr_bytes[1],
-                 mac_addr.addr_bytes[2], mac_addr.addr_bytes[3],
-                 mac_addr.addr_bytes[4], mac_addr.addr_bytes[5]);
+        snprintf(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X", mac_addr.addr_bytes[0], mac_addr.addr_bytes[1], mac_addr.addr_bytes[2],
+                 mac_addr.addr_bytes[3], mac_addr.addr_bytes[4], mac_addr.addr_bytes[5]);
         info.mac = mac_str;
     } else {
         info.mac = "неизвестен";
@@ -175,9 +166,9 @@ InterfaceInfo ShowInfoInterface::get_basic_info(uint16_t port_id) const {
 
     return info;
 }
-LinkInfo ShowInfoInterface::get_link_info(uint16_t port_id) const {
+LinkInfo ShowInfoInterface::get_link_info(uint16_t port_id) {
     LinkInfo info;
-    struct rte_eth_link link;
+    rte_eth_link link{};
 
     if (rte_eth_link_get_nowait(port_id, &link) == 0) {
         info.link_status = link.link_status;
@@ -187,11 +178,10 @@ LinkInfo ShowInfoInterface::get_link_info(uint16_t port_id) const {
     }
 
     return info;
-
 }
-PortStats ShowInfoInterface::get_port_stats(uint16_t port_id) const {
+PortStats ShowInfoInterface::get_port_stats(uint16_t port_id) {
     PortStats stats;
-    struct rte_eth_stats eth_stats;
+    rte_eth_stats eth_stats{};
 
     if (rte_eth_stats_get(port_id, &eth_stats) == 0) {
         stats.rx_packets = eth_stats.ipackets;
@@ -221,9 +211,9 @@ PortStats ShowInfoInterface::get_port_stats(uint16_t port_id) const {
 
     return stats;
 }
-PortCapabilities ShowInfoInterface::get_port_capabilities(uint16_t port_id) const {
+PortCapabilities ShowInfoInterface::get_port_capabilities(uint16_t port_id) {
     PortCapabilities caps;
-    struct rte_eth_dev_info dev_info;
+    rte_eth_dev_info dev_info{};
 
     if (rte_eth_dev_info_get(port_id, &dev_info) == 0) {
         caps.rx_offload_capa = dev_info.rx_offload_capa;
@@ -238,7 +228,7 @@ PortCapabilities ShowInfoInterface::get_port_capabilities(uint16_t port_id) cons
 
     return caps;
 }
-std::vector<XStatItem> ShowInfoInterface::get_xstats(uint16_t port_id) const {
+std::vector<XStatItem> ShowInfoInterface::get_xstats(uint16_t port_id) {
     std::vector<XStatItem> xstats_vec;
 
     // Получаем количество статистик
@@ -248,8 +238,8 @@ std::vector<XStatItem> ShowInfoInterface::get_xstats(uint16_t port_id) const {
     }
 
     // Выделяем память для статистик и их имен
-    std::vector<struct rte_eth_xstat> xstats(num_xstats);
-    std::vector<struct rte_eth_xstat_name> xstat_names(num_xstats);
+    std::vector<rte_eth_xstat> xstats(num_xstats);
+    std::vector<rte_eth_xstat_name> xstat_names(num_xstats);
 
     // Получаем статистики и их имена
     if (rte_eth_xstats_get(port_id, xstats.data(), num_xstats) != num_xstats ||
@@ -267,7 +257,7 @@ std::vector<XStatItem> ShowInfoInterface::get_xstats(uint16_t port_id) const {
 
     return xstats_vec;
 }
-DetailedInterfaceInfo ShowInfoInterface::get_detailed_info(uint16_t port_id) const {
+DetailedInterfaceInfo ShowInfoInterface::get_detailed_info(uint16_t port_id) {
     DetailedInterfaceInfo detailed_info;
 
     detailed_info.basic_info = get_basic_info(port_id);

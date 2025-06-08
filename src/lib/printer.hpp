@@ -113,13 +113,12 @@ class ShowInfoInterface final : public InformerDpdk {
    private:
     void init() const;
 
-    // Вспомогательные методы для получения информации
-    InterfaceInfo get_basic_info(uint16_t port_id) const;
-    LinkInfo get_link_info(uint16_t port_id) const;
-    PortStats get_port_stats(uint16_t port_id) const;
-    PortCapabilities get_port_capabilities(uint16_t port_id) const;
-    std::vector<XStatItem> get_xstats(uint16_t port_id) const;
-    DetailedInterfaceInfo get_detailed_info(uint16_t port_id) const;
+    [[nodiscard]] static InterfaceInfo get_basic_info(uint16_t port_id) ;
+    [[nodiscard]] static LinkInfo get_link_info(uint16_t port_id) ;
+    [[nodiscard]] static PortStats get_port_stats(uint16_t port_id) ;
+    [[nodiscard]] static PortCapabilities get_port_capabilities(uint16_t port_id) ;
+    [[nodiscard]] static std::vector<XStatItem> get_xstats(uint16_t port_id) ;
+    [[nodiscard]] static DetailedInterfaceInfo get_detailed_info(uint16_t port_id) ;
 
     static constexpr std::array<char const *, 6> M_DRIVERS{"librte_net_i40e.so.24",    "librte_net_ixgbe.so.24", "librte_net_e1000.so.24",
                                                            "librte_net_vmxnet3.so.24", "librte_net_ice.so.24",   "librte_net_tap.so.24.0"}; // 48
